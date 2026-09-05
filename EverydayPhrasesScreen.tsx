@@ -14,7 +14,7 @@ import {
 
 type EverydayPhrasesScreenProps = {
   onBack: () => void;
-  onComplete: (lessonId: string, wordsCompleted: number) => void;
+  onComplete: (lessonId: string, wordsCompleted: number) => Promise<void> | void;
   onGoToJourney: () => void;
 };
 
@@ -218,8 +218,8 @@ export default function EverydayPhrasesScreen({
 
       <TouchableOpacity
         style={styles.completeButton}
-        onPress={() => {
-          onComplete("everyday-phrases-1", totalPhrases);
+        onPress={async () => {
+          await onComplete("everyday-phrases-1", totalPhrases);
           onGoToJourney();
         }}
         activeOpacity={0.8}

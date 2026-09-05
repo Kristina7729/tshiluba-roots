@@ -14,14 +14,14 @@ import {
 
 type SpeakScreenProps = {
   onBack: () => void;
-  onComplete: (lessonId: string, wordsCompleted: number) => void;
+  onComplete: (lessonId: string, wordsCompleted: number) => Promise<void> | void;
   onGoToJourney: () => void;
 };
 
 const lessonOne = [
   { english: "Hello!", tshiluba: "Moyo!", audioKey: "Moyo" },
   { english: "How are you?", tshiluba: "Udi bishi?", audioKey: "How are you?" },
-  { english: "I'm okay.", tshiluba: "Ndi bimpe", audioKey: "I'm okay." },
+  { english: "I'm okay.", tshiluba: "Ndi bimpe / Ndi biakana", audioKey: "I'm okay." },
   { english: "What is your name?", tshiluba: "Dina dieba ngani?", audioKey: "What is your name?" },
   { english: "My name is ____.", tshiluba: "Dina diani ____", audioKey: "My name is _____." },
 ];
@@ -65,8 +65,7 @@ const conversationTwo: ConversationLine[] = [
   { speaker: "👩 Person A", english: "What is your name?", tshiluba: "Dina dieba ngani?", audioKey: "What is your name?" },
   { speaker: "👩 Person B", english: "My name is ____.", tshiluba: "Dina diani ____", audioKey: "My name is _____." },
   { speaker: "👩 Person A", english: "Where are you from?", tshiluba: "Kwenu penyi?", audioKey: "Where are you from?" },
-  { speaker: "👩 Person B", english: "I am from ____.", tshiluba: "Ndi wa ku ____", audioKey: "I am from ____" },
-  { speaker: "👩 Person B", english: "And you?", tshiluba: "..kadi wewa?", audioKey: "...and you?" },
+  { speaker: "👩 Person B", english: "I am from ____, and you?", tshiluba: "Ndi wa ku ____, kadi wewa?", audioKey: "I am from ____, and you?" },
   { speaker: "👩 Person A", english: "I am from ____.", tshiluba: "Ndi wa ku ____", audioKey: "I am from ____" },
   { speaker: "👩 Person A", english: "Nice to meet you.", tshiluba: "Ndi ne disanka bua kumanyangana", audioKey: "Nice to meet you." },
   { speaker: "👩 Person A", english: "How old are you?", tshiluba: "Udi ni mvula bungi munyi?", audioKey: "How old are you?" },
@@ -75,12 +74,12 @@ const conversationTwo: ConversationLine[] = [
 
 const conversationThree: ConversationLine[] = [
   { speaker: "👩 Person A", english: "What's the time?", tshiluba: "Tundi diba kayi?", audioKey: "What's the time?" },
-  { speaker: "👩 Person B", english: "I don't understand what you said.", tshiluba: "Tshena ngunvua bindi.", audioKey: "I don't understand what you said" },
+  { speaker: "👩 Person B", english: "I don't understand what you said.", tshiluba: "Tshena ngunvua bindi wamba to", audioKey: "I don't understand what you said" },
   { speaker: "👩 Person B", english: "Can you speak slower?", tshiluba: "Akula koku biteketa?", audioKey: "Can you speak slower?" },
   { speaker: "👩 Person A", english: "No.", tshiluba: "To", audioKey: "No." },
   { speaker: "👩 Person A", english: "Come, let's learn Tshiluba.", tshiluba: "Luaku tulonga Tshiluba.", audioKey: "Come, let's learn Tshiluba" },
   { speaker: "👩 Person B", english: "Yes.", tshiluba: "Eyowa", audioKey: "Yes." },
-  { speaker: "👩 Person A", english: "See you tomorrow.", tshiluba: "Nitumonagana makelela.", audioKey: "See you tomorrow." },
+  { speaker: "👩 Person A", english: "See you tomorrow.", tshiluba: "nitumonagana makelela / malaba natumonagana", audioKey: "See you tomorrow." },
 ];
 
 const audioMap: Record<string, number> = {
@@ -92,11 +91,11 @@ const audioMap: Record<string, number> = {
   "I could be better.": require("./audio/ndi buakuikala bilenga.m4a"),
   "How did you sleep?": require("./audio/Udi mulala bimpe.m4a"),
   "I slept good.": require("./audio/Ndi mulala bimpe.m4a"),
-  "See you later.": require("./audio/uye bimpe.m4a"),
+  "See you later.": require("./audio/uye bimpe1.m4a"),
   "Good Morning": require("./audio/betulawu.m4a"),
   "Things are good": require("./audio/malu bimpe.m4a"),
   "I could be better": require("./audio/ndi buakuikala bilenga.m4a"),
-  "See you": require("./audio/uye bimpe.m4a"),
+  "See you": require("./audio/uye bimpe1.m4a"),
   "How are you?": require("./audio/udi bishi.m4a"),
   "I'm okay.": require("./audio/ndi bimpe.m4a"),
   "What is your name?": require("./audio/dina dieba ngani_.m4a"),
@@ -114,7 +113,7 @@ const audioMap: Record<string, number> = {
   "Did you understand?": require("./audio/undi muvua.m4a"),
   "Can you repeat this again?": require("./audio/bangulula kabidi.m4a"),
   "I don't understand what you said": require("./audio/tshena ngunvua bindi.m4a"),
-  "I am from ____": require("./audio/ndi wa ku.m4a"),
+  "I am from ____": require("./audio/ndi wa ku1.m4a"),
   "I am ____ years old.": require("./audio/Ndi ni muvula.m4a"),
   "Thank you": require("./audio/tuasadidila.m4a"),
   "I didn't hear": require("./audio/tshena muvua to.m4a"),
@@ -229,18 +228,18 @@ export default function SpeakScreen({ onBack, onComplete, onGoToJourney }: Speak
     </>
   );
 
-  const completeCurrentLesson = () => {
+  const completeCurrentLesson = async () => {
     if (currentLesson === 1) {
-      onComplete("speak-1", lessonOne.length);
+      await onComplete("speak-1", lessonOne.length);
       setCurrentLesson(2);
       return;
     }
     if (currentLesson === 2) {
-      onComplete("speak-2", lessonTwo.length);
+      await onComplete("speak-2", lessonTwo.length);
       setCurrentLesson(3);
       return;
     }
-    onComplete("speak-3", lessonThree.length);
+    await onComplete("speak-3", lessonThree.length);
     onGoToJourney();
   };
 

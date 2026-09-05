@@ -14,7 +14,7 @@ import {
 
 type FamilyScreenProps = {
   onBack: () => void;
-  onComplete: (lessonId: string, wordsCompleted: number) => void;
+  onComplete: (lessonId: string, wordsCompleted: number) => Promise<void> | void;
   onGoToJourney: () => void;
 };
 
@@ -350,13 +350,13 @@ export default function FamilyScreen({
     );
   };
 
-  const completeLessonOne = () => {
-    onComplete("family-1", familyWords.length);
+  const completeLessonOne = async () => {
+    await onComplete("family-1", familyWords.length);
     setCurrentLesson(2);
   };
 
-  const completeLessonTwo = () => {
-    onComplete(
+  const completeLessonTwo = async () => {
+    await onComplete(
       "family-2",
       pluralExamples.length
     );

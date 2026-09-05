@@ -14,7 +14,7 @@ import {
 
 type NumbersScreenProps = {
   onBack: () => void;
-  onComplete: (lessonId: string, wordsCompleted: number) => void;
+  onComplete: (lessonId: string, wordsCompleted: number) => Promise<void> | void;
   onGoToJourney: () => void;
 };
 
@@ -249,8 +249,8 @@ export default function NumbersScreen({
      COMPLETE LESSON 1
   ========================= */
 
-  const completeLessonOne = () => {
-    onComplete(
+  const completeLessonOne = async () => {
+    await onComplete(
       "numbers-1",
       lessonOneNumbers.length
     );
@@ -262,8 +262,8 @@ export default function NumbersScreen({
      COMPLETE LESSON 2
   ========================= */
 
-  const completeLessonTwo = () => {
-    onComplete(
+  const completeLessonTwo = async () => {
+    await onComplete(
       "numbers-2",
       lessonTwoNumbers.length
     );

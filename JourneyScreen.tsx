@@ -6,6 +6,7 @@ import {
   View,
   ScrollView,
 } from "react-native";
+import { calculateWordsLearned } from "./lessons";
 
 type JourneyScreenProps = {
   completedLessonIds: string[];
@@ -142,6 +143,11 @@ export default function JourneyScreen({
     new Set(completedLessonIds)
   );
 
+  const effectiveWordsLearned = Math.max(
+    wordsLearned,
+    calculateWordsLearned(uniqueCompletedLessons)
+  );
+
   const completedCount = uniqueCompletedLessons.filter(
     (id) =>
       lessonGroups.some((group) =>
@@ -269,7 +275,7 @@ export default function JourneyScreen({
           </Text>
 
           <Text style={styles.statNumber}>
-            {wordsLearned}
+            {effectiveWordsLearned}
           </Text>
 
           <Text style={styles.statLabel}>

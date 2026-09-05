@@ -1,7 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useState } from "react";
-import { lessons } from "./lessons";
+import React, { useEffect, useRef, useState } from "react";
+import { lessons, calculateWordsLearned } from "./lessons";
 import { StatusBar } from "expo-status-bar";
+import { getProgress, saveProgress, DEFAULT_USER_ID } from "./services/progressApi";
+import safeStorage from "./services/persistentStorage";
 
 import WelcomeScreen from "./WelcomeScreen";
 import RootsScreen from "./RootsScreen";
@@ -30,49 +31,119 @@ export default function App() {
   const [bestQuizScore, setBestQuizScore] = useState(0);
   const [latestQuizScore, setlatestQuizScore] = useState(0);
 
+  const isLoadedRef = useRef(false);
+  const completedLessonIdsRef = useRef<string[]>([]);
+  const wordsLearnedRef = useRef(0);
+  const bestQuizScoreRef = useRef(0);
+  const latestQuizScoreRef = useRef(0);
+
+  useEffect(() => {
+    completedLessonIdsRef.current = completedLessonIds;
+    wordsLearnedRef.current = wordsLearned;
+    bestQuizScoreRef.current = bestQuizScore;
+    latestQuizScoreRef.current = latestQuizScore;
+  }, [completedLessonIds, wordsLearned, bestQuizScore, latestQuizScore]);
+
   // This keeps track of which journey the learner is on.
   const [journeyNumber, setJourneyNumber] = useState(1);
 
-// PERSIST PROGRESS
+// PERSIST PROGRESS - Load once on startup
 useEffect(() => {
+  let isMounted = true;
+
   const loadProgress = async () => {
     try {
-      const savedProgress = await AsyncStorage.getItem("tshilubaProgress");
+      let mergedCompletedLessonIds: string[] = [];
+      let mergedWordsLearned = 0;
+      let mergedBestQuizScore = 0;
+      let mergedLatestQuizScore = 0;
+
+      // 1. Immediately read local persistent AsyncStorage cache
+      const savedProgress = await safeStorage.getItem("tshilubaProgress");
 
       if (savedProgress) {
-        const progress = JSON.parse(savedProgress);
-
-        setCompletedLessonIds(progress.completedLessonIds || []);
-        setWordsLearned(progress.wordsLearned || 0);
-        setBestQuizScore(progress.bestQuizScore ?? null);
-        setlatestQuizScore(progress.latestQuizScore ?? null);
+        try {
+          const progress = JSON.parse(savedProgress);
+          const localIds = progress.completedLessons || progress.completedLessonIds || [];
+          if (Array.isArray(localIds)) {
+            mergedCompletedLessonIds = [...localIds];
+          }
+          if (typeof progress.wordsLearned === "number") {
+            mergedWordsLearned = progress.wordsLearned;
+          }
+          if (typeof progress.bestQuizScore === "number") {
+            mergedBestQuizScore = progress.bestQuizScore;
+          }
+          if (typeof progress.latestQuizScore === "number") {
+            mergedLatestQuizScore = progress.latestQuizScore;
+          }
+        } catch (e) {
+          console.log("Error parsing local progress:", e);
+        }
       }
+
+      // 2. Fetch and merge latest progress from AWS API
+      const remoteProgress = await getProgress(DEFAULT_USER_ID);
+      if (remoteProgress) {
+        const remoteIds = remoteProgress.completedLessons || remoteProgress.completedLessonIds || [];
+        if (Array.isArray(remoteIds) && remoteIds.length > 0) {
+          mergedCompletedLessonIds = Array.from(
+            new Set([...mergedCompletedLessonIds, ...remoteIds])
+          );
+        }
+        if (typeof remoteProgress.wordsLearned === "number" && remoteProgress.wordsLearned > 0) {
+          mergedWordsLearned = Math.max(mergedWordsLearned, remoteProgress.wordsLearned);
+        }
+        if (typeof remoteProgress.bestQuizScore === "number") {
+          mergedBestQuizScore = Math.max(mergedBestQuizScore, remoteProgress.bestQuizScore);
+        }
+        if (typeof remoteProgress.latestQuizScore === "number") {
+          mergedLatestQuizScore = remoteProgress.latestQuizScore;
+        }
+      }
+
+      // 3. Ensure wordsLearned accurately reflects the sum of ALL completed lessons
+      const calculatedWords = calculateWordsLearned(mergedCompletedLessonIds);
+      mergedWordsLearned = Math.max(mergedWordsLearned, calculatedWords);
+
+      if (isMounted) {
+        completedLessonIdsRef.current = mergedCompletedLessonIds;
+        wordsLearnedRef.current = mergedWordsLearned;
+        bestQuizScoreRef.current = mergedBestQuizScore;
+        latestQuizScoreRef.current = mergedLatestQuizScore;
+
+        setCompletedLessonIds(mergedCompletedLessonIds);
+        setWordsLearned(mergedWordsLearned);
+        setBestQuizScore(mergedBestQuizScore);
+        setlatestQuizScore(mergedLatestQuizScore);
+      }
+
+      // Reconcile merged progress back to local cache
+      await safeStorage.setItem(
+        "tshilubaProgress",
+        JSON.stringify({
+          completedLessons: mergedCompletedLessonIds,
+          completedLessonIds: mergedCompletedLessonIds,
+          wordsLearned: mergedWordsLearned,
+          bestQuizScore: mergedBestQuizScore,
+          latestQuizScore: mergedLatestQuizScore,
+        })
+      );
     } catch (error) {
       console.log("Error loading progress:", error);
+    } finally {
+      if (isMounted) {
+        isLoadedRef.current = true;
+      }
     }
   };
 
   loadProgress();
-}, []);
 
-useEffect(() => {
-  AsyncStorage.setItem(
-    "tshilubaProgress",
-    JSON.stringify({
-      completedLessonIds,
-      wordsLearned,
-      bestQuizScore,
-      latestQuizScore,
-    })
-  ).catch((error) => {
-    console.log("Error saving progress:", error);
-  });
-}, [
-  completedLessonIds,
-  wordsLearned,
-  bestQuizScore,
-  latestQuizScore,
-]);
+  return () => {
+    isMounted = false;
+  };
+}, []);
 
 // --------------------------------
 // COMPLETE A LESSON
@@ -81,27 +152,77 @@ useEffect(() => {
   // COMPLETE A LESSON
   // -----------------------------
 
-  const completeLesson = (lessonId: string, words: number) => {
-  setCompletedLessonIds((current) => {
-    if (current.includes(lessonId)) {
-      return current;
+  const completeLesson = async (lessonId: string, words: number): Promise<void> => {
+    const currentIds = completedLessonIdsRef.current;
+    if (currentIds.includes(lessonId)) {
+      return;
     }
 
-    setWordsLearned((currentWords) => currentWords + words);
+    const nextCompletedLessonIds = [...currentIds, lessonId];
+    const calculatedTotalWords = calculateWordsLearned(nextCompletedLessonIds);
+    const nextWordsLearned = Math.max(wordsLearnedRef.current + words, calculatedTotalWords);
 
-    return [...current, lessonId];
-  });
+    completedLessonIdsRef.current = nextCompletedLessonIds;
+    wordsLearnedRef.current = nextWordsLearned;
 
-  
-};
+    const payload = {
+      completedLessons: nextCompletedLessonIds,
+      completedLessonIds: nextCompletedLessonIds,
+      wordsLearned: nextWordsLearned,
+      bestQuizScore: bestQuizScoreRef.current,
+      latestQuizScore: latestQuizScoreRef.current,
+    };
+
+    // 1. Immediately write to AsyncStorage and await completion
+    try {
+      await safeStorage.setItem("tshilubaProgress", JSON.stringify(payload));
+    } catch (error) {
+      console.log("Error saving progress locally in completeLesson:", error);
+    }
+
+    // 2. Immediately write to remote AWS API Gateway / DynamoDB and await completion
+    try {
+      await saveProgress(DEFAULT_USER_ID, payload);
+    } catch (error) {
+      console.log("Error syncing progress to remote API in completeLesson:", error);
+    }
+
+    // 3. Update React state
+    setCompletedLessonIds(nextCompletedLessonIds);
+    setWordsLearned(nextWordsLearned);
+  };
 
   // -----------------------------
   // COMPLETE QUIZ
   // -----------------------------
 
-  const completeQuiz = (score: number) => {
+  const completeQuiz = async (score: number): Promise<void> => {
+    const nextBest = Math.max(bestQuizScoreRef.current, score);
+    bestQuizScoreRef.current = nextBest;
+    latestQuizScoreRef.current = score;
+
+    const payload = {
+      completedLessons: completedLessonIdsRef.current,
+      completedLessonIds: completedLessonIdsRef.current,
+      wordsLearned: wordsLearnedRef.current,
+      bestQuizScore: nextBest,
+      latestQuizScore: score,
+    };
+
+    try {
+      await safeStorage.setItem("tshilubaProgress", JSON.stringify(payload));
+    } catch (error) {
+      console.log("Error saving progress locally in completeQuiz:", error);
+    }
+
+    try {
+      await saveProgress(DEFAULT_USER_ID, payload);
+    } catch (error) {
+      console.log("Error syncing progress to remote API in completeQuiz:", error);
+    }
+
     setlatestQuizScore(score);
-    setBestQuizScore((current) => Math.max(current, score));
+    setBestQuizScore(nextBest);
 
     setScreen("journey");
   };

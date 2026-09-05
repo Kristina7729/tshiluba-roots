@@ -14,7 +14,7 @@ import {
 
 type TimeScreenProps = {
   onBack: () => void;
-  onComplete: (lessonId: string, wordsCompleted: number) => void;
+  onComplete: (lessonId: string, wordsCompleted: number) => Promise<void> | void;
   onGoToJourney: () => void;
 };
 
@@ -277,8 +277,8 @@ export default function TimeScreen({
     );
   };
 
-  const completeLesson = () => {
-    onComplete("time-1", totalWords);
+  const completeLesson = async () => {
+    await onComplete("time-1", totalWords);
     onGoToJourney();
   };
 

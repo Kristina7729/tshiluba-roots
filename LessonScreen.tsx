@@ -14,7 +14,7 @@ import {
 
 type LessonScreenProps = {
   onBack: () => void;
-  onComplete: (lessonId: string, wordsCompleted: number) => void;
+  onComplete: (lessonId: string, wordsCompleted: number) => Promise<void> | void;
   onGoToJourney: () => void;
 };
 
@@ -227,7 +227,7 @@ const audioMap: Record<string, any> = {
   "Good Afternoon": require("./audio/dilo dilenga.m4a"),
   "Good Evening": require("./audio/brutuka bulenga.m4a"),
   "Good Night": require("./audio/lalayi bimpe - nulala bilenga.m4a"),
-  "See you": require("./audio/uye bimpe.m4a"),
+  "See you": require("./audio/uye bimpe1.m4a"),
   "See you tomorrow": require("./audio/nitumonagana makelela.m4a"),
   "Have a nice day": require("./audio/dituku dilenga.m4a"),
   "Have a nice trip": require("./audio/luenda lulenga.m4a"),
@@ -478,23 +478,23 @@ export default function LessonScreen({
      COMPLETE LESSON
   ========================= */
 
-  const completeCurrentLesson = () => {
+  const completeCurrentLesson = async () => {
     if (currentLesson === 1) {
-      onComplete(
+      await onComplete(
         "greetings-1",
         greetings.length
       );
 
       setCurrentLesson(2);
     } else if (currentLesson === 2) {
-      onComplete(
+      await onComplete(
         "greetings-2",
         introductions.length
       );
 
       setCurrentLesson(3);
     } else {
-      onComplete(
+      await onComplete(
         "greetings-3",
         howAreYou.length
       );

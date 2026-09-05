@@ -133,3 +133,30 @@ export const lessons = [
     words: 10,
   },
 ];
+
+export const LESSON_WORD_COUNTS: Record<string, number> = {
+  "greetings-1": 11,
+  "greetings-2": 7,
+  "greetings-3": 16,
+  "family-1": 15,
+  "family-2": 15,
+  "numbers-1": 10,
+  "numbers-2": 10,
+  "time-1": 15,
+  "everyday-phrases-1": 13,
+  "common-verbs-1": 10,
+  "common-verbs-2": 10,
+  "speak-1": 5,
+  "speak-2": 6,
+  "speak-3": 5,
+};
+
+/**
+ * Calculates the total words learned across all completed lessons.
+ */
+export function calculateWordsLearned(completedLessonIds: string[]): number {
+  const uniqueIds = Array.from(new Set(completedLessonIds));
+  return uniqueIds.reduce((total, id) => {
+    return total + (LESSON_WORD_COUNTS[id] || 0);
+  }, 0);
+}

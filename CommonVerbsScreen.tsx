@@ -14,7 +14,7 @@ import {
 
 type CommonVerbsScreenProps = {
   onBack: () => void;
-  onComplete: (lessonId: string, wordsCompleted: number) => void;
+  onComplete: (lessonId: string, wordsCompleted: number) => Promise<void> | void;
   onGoToJourney: () => void;
 };
 
@@ -247,8 +247,8 @@ export default function CommonVerbsScreen({
           {/* Complete Lesson 1 */}
           <TouchableOpacity
   style={styles.completeButton}
-  onPress={() => {
-    onComplete(
+  onPress={async () => {
+    await onComplete(
       "common-verbs-1",
       lessonOneVerbs.length
     );
@@ -290,14 +290,14 @@ export default function CommonVerbsScreen({
           {/* Complete Entire Category */}
           <TouchableOpacity
             style={styles.completeButton}
-            onPress={() => {
-  onComplete(
-    "common-verbs-2",
-    lessonTwoVerbs.length
-  );
-  onGoToJourney();
-}}
-activeOpacity={0.8}
+            onPress={async () => {
+              await onComplete(
+                "common-verbs-2",
+                lessonTwoVerbs.length
+              );
+              onGoToJourney();
+            }}
+            activeOpacity={0.8}
           >
             <Text style={styles.completeButtonText}>
               Complete Common Verbs Lesson ✓
