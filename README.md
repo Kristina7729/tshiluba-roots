@@ -87,7 +87,7 @@ Tshiluba Roots uses a serverless AWS architecture to store learning progress.
 │       DynamoDB          │
 │   TshilubaProgress      │
 └─────────────────────────┘
-
+```
 ---
 
 ## 🖼️ Screenshots
@@ -97,7 +97,7 @@ Tshiluba Roots uses a serverless AWS architecture to store learning progress.
 <img width="645" height="1398" alt="Home" src="https://github.com/user-attachments/assets/30d7200a-770c-4ac2-8153-2291ef23362a" />
 
 
-### - 🌱 Roots
+### 🌱 Roots
 
 <img width="645" height="1398" alt="Roots" src="https://github.com/user-attachments/assets/e702c946-6b7f-4149-ae79-7f3686fc68a8" />
 
@@ -106,15 +106,13 @@ Tshiluba Roots uses a serverless AWS architecture to store learning progress.
 
 <img width="645" height="1398" alt="Lesson" src="https://github.com/user-attachments/assets/a4336dea-df57-4ddb-861c-54f1c74e2a5b" />
 
-
 ### 💬 Everyday Phrases
 
-<img width="645" height="1398" alt="Everyday Conversations"<img width="645" height="1398" alt="Roots" src="https://github.com/user-attachments/assets/d7b10daf-b30c-433b-b261-f184ed1ae7c1" />
+<img width="645" height="1398" alt="Everyday Phrases" src="https://github.com/user-attachments/assets/d7b10daf-b30c-433b-b261-f184ed1ae7c1" />
 
-### 🧠 Interactive quizzes
+### 🧠 Interactive quiz
 
-<img width="645" height="1398" alt="Quizz" src="https://github.com/user-attachments/assets/7e125ddf-7063-4285-a72d-561ea8aea2e3" />
-
+<img width="645" height="1398" alt="Quiz" src="https://github.com/user-attachments/assets/7e125ddf-7063-4285-a72d-561ea8aea2e3" />
 
 ### 🌱 Journey & Progress
 
