@@ -8,7 +8,7 @@ The application combines a React Native/Expo mobile interface with a serverless 
 
 ## 🎥 App Demo
 
-[[▶️ Watch the Tshiluba Roots Demo]((https://youtube.com/shorts/56U8gYvN34c?is=18Lt1bPCxSDmEJ1A))]
+[[▶️ Watch the Tshiluba Roots Demo](https://youtube.com/shorts/56U8gYvN34c?is=18Lt1bPCxSDmEJ1A))]
 
 A walkthrough of the application showcasing interactive lessons, audio pronunciation, everyday phrases, conversation practice, and learning progress tracking.
 
